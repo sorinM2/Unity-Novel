@@ -104,6 +104,7 @@ public class TextArchitect
                 tmpro.maxVisibleCharacters = tmpro.textInfo.characterCount;
                 break;
         case BuildMethod.fade:
+                tmpro.ForceMeshUpdate();
                 break;
         }
         Stop();
@@ -151,7 +152,44 @@ public class TextArchitect
 
     private void Prepare_Fade()
     {
+        tmpro.text = preText;
+        if (preText != "")
+        {
+            tmpro.ForceMeshUpdate();
+            preTextLength = tmpro.textInfo.characterCount;
+        }
+        else preTextLength = 0;
 
+        tmpro.text += TargetText;
+        tmpro.maxVisibleCharacters = int.MaxValue;
+        tmpro.ForceMeshUpdate();
+
+        TMP_TextInfo textInfo = tmpro.textInfo;
+
+        Color colorVisible = new Color(textColor.r, textColor.g, textColor.b, 1);
+        Color colorHidden = new Color(textColor.r, textColor.g, textColor.b, 0);
+
+        Color32[] vertexColors = textInfo.meshInfo[textInfo.characterInfo[0].materialReferenceIndex].colors32;
+
+        for (int i = 0; i < textInfo.characterCount; ++i)
+        {
+            TMP_CharacterInfo charInfo = textInfo.characterInfo[i];
+
+            if (!charInfo.isVisible)
+                continue;
+
+            if (i < preTextLength)
+            {
+                for (int v = 0; v < 4; ++v)
+                    vertexColors[charInfo.vertexIndex + v] = colorVisible;
+            }
+            else
+            {
+                for (int v = 0; v < 4; ++v)
+                    vertexColors[charInfo.vertexIndex + v] = colorHidden;
+            }
+        }
+        tmpro.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
     }
 
     private IEnumerator Build_TypeWriter()
@@ -165,6 +203,51 @@ public class TextArchitect
 
     private IEnumerator Build_Fade()
     {
-        yield return null;
+        int minRange = preTextLength;
+        int maxRange = minRange + 1;
+
+        byte alphaTreshold = 15;
+
+        TMP_TextInfo textInfo = tmpro.textInfo;
+
+        Color32[] vertexColors = textInfo.meshInfo[textInfo.characterInfo[0].materialReferenceIndex].colors32;
+        float[] alphas = new float[textInfo.characterCount];
+
+        while ( true )
+        {
+
+            float fadeSpeed = ((hurryUp ? charactersPerCycle * 5 : charactersPerCycle) * speed) * 4;
+            for ( int i = minRange; i < maxRange; i++ )
+            {
+                TMP_CharacterInfo charInfo = textInfo.characterInfo[i];
+
+                if (!charInfo.isVisible)
+                    continue;
+
+                int vertexIndex = textInfo.characterInfo[i].vertexIndex;
+                alphas[i] = Mathf.MoveTowards(alphas[i], 255, fadeSpeed);
+
+                for (int v = 0; v < 4; ++v)
+                    vertexColors[charInfo.vertexIndex + v].a = (byte)alphas[i];
+
+                if (alphas[i] >= 255)
+                    minRange++;
+            }
+            tmpro.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
+
+            bool LastCharacterIsInvisible = !textInfo.characterInfo[maxRange - 1].isVisible;
+
+            if (alphas[maxRange - 1] > alphaTreshold || LastCharacterIsInvisible)
+            {
+                if (maxRange < textInfo.characterCount) {
+                    maxRange++; 
+                }
+                else if (alphas[maxRange - 1] >= 255 || LastCharacterIsInvisible)
+                    break;
+            }
+            yield return new WaitForEndOfFrame();
+
+        }
+
     }
 }

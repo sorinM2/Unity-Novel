@@ -1,0 +1,9 @@
+John "Hello world!" lis(items -f long), playSong("Intro song" -v 1)
+
+setScene("Classroom" -s 5.5)
+
+World "Hello, \"quote here\" right back at you " comanda coaie("Mamaie" -b da), comanda2("mai")
+
+
+
+Narator "And so the traditional 'Hello World' conversation ended" PlaySong(End, -p 0.5), list(players), savegame(1 -g -all -f simple)
