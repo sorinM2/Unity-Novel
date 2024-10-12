@@ -14,6 +14,7 @@ public class TestConversations : MonoBehaviour
     {
 
         List<string> lines = FileManager.ReadTextAsset("testFile", false);
+
         DialogueSystem.instance.Say(lines);
     }
 }

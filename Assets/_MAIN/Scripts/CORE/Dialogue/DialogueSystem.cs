@@ -11,7 +11,7 @@ namespace Dialogue
         private ConversationManager conversationManager;
 
         private TextArchitect architect;
-        public static DialogueSystem instance;
+        public static DialogueSystem instance { get; private set; }
 
         public delegate void DialogueSystemEvent();
         public event DialogueSystemEvent onUserPromtNext;
@@ -41,7 +41,7 @@ namespace Dialogue
         }
         public void ShowSpeakerName(string name = "")
         {
-            if (name.ToLower() != "narator")
+            if (name.ToLower() != "narrator")
                 dialogueContainer.nameContainer.Show(name);
             else HideSpeakerName();
         }
